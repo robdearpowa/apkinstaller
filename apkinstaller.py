@@ -4,6 +4,7 @@ import PySimpleGUI as sg
 import os
 import subprocess
 from configparser import ConfigParser
+from threading import Thread
 
 sg.theme("Default")
 
@@ -17,6 +18,7 @@ class App:
             [sg.Text("Adb path")],
             [sg.Input(key="-ADBPATH-", readonly=True), sg.FileBrowse(key="-FBADB-", file_types=[("ADB", "*.exe")])],
             [sg.Button(key="-INSTALL-", button_text="Install"), sg.Text(key="-STATE-")],
+            [sg.Multiline(key="-CONSOLE-", size=(None, 10), disabled=True, autoscroll=True, horizontal_scroll=True, visible=False)]
         ]
 
         self.window = sg.Window("Apk Installer", layout=layout, finalize=True)
@@ -24,6 +26,7 @@ class App:
         self.apk_input = self.window["-APKPATH-"]
         self.adb_input = self.window["-ADBPATH-"]
         self.txt_state = self.window["-STATE-"]
+        self.console = self.window["-CONSOLE-"]
 
         self.carica_configurazione()
 
@@ -51,15 +54,31 @@ class App:
             try:
                 self.txt_state.update(value="Installing...")
 
-                code = subprocess.call(args=f'{self.adb_input.get()} install -t "{self.apk_input.get()}"', shell=True)
-                print(code)
+                thread = Thread(target=self.installa_async)
 
-                if (code == 0):
-                    self.txt_state.update(value="Done!")
-                else:
-                    self.txt_state.update(value="Error :(")
+                thread.start()
+
             finally:
                 pass
+
+    def installa_async(self):
+        
+        p = subprocess.Popen(args=f'{self.adb_input.get()} install -t "{self.apk_input.get()}"', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+        output = ""
+        for line in p.stdout:
+            output += f"{line.decode().rstrip()}\n"
+            self.console.update(value=output, visible=True)
+            self.window.refresh()
+
+        p.wait()
+
+        print(p.returncode)
+
+        if (p.returncode == 0):
+            self.txt_state.update(value="Done!")
+        else:
+            self.txt_state.update(value="Error :(")
 
     def salva_configurazione(self):
         config = ConfigParser()
