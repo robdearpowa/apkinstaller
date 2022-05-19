@@ -5,8 +5,19 @@ import subprocess
 from configparser import ConfigParser
 from threading import Thread
 
-sg.theme("Default")
-
+sg.LOOK_AND_FEEL_TABLE["Marketwall"] = {
+    "BACKGROUND": "#424242",
+    "TEXT": "#FFFFFF",
+    "INPUT": "#656565",
+    "TEXT_INPUT": "#656565",
+    "SCROLL": "#212121",
+    "BUTTON": ("#FFFFFF", "#4595F7"),
+    "PROGRESS": ("#656565", "#4595F7"),
+    "BORDER": 1, "SLIDER_DEPTH": 0,
+    "PROGRESS_DEPTH": 0,
+}
+  
+sg.theme('Marketwall')
 
 class DeviceModel:
     def __init__(self, id: str, name: str) -> None:
@@ -22,9 +33,9 @@ class App:
     def __init__(self) -> None:
         layout = [
             [sg.Text("Apk path")],
-            [sg.Input(key="-APKPATH-", readonly=True), sg.FileBrowse(key="-FBAPK-", file_types=[("APK", "*.apk")])],
+            [sg.Input(key="-APKPATH-", readonly=True, disabled_readonly_text_color=sg.theme_input_text_color(), disabled_readonly_background_color=sg.theme_input_background_color()), sg.FileBrowse(key="-FBAPK-", file_types=[("APK", "*.apk")])],
             [sg.Text("Adb path")],
-            [sg.Input(key="-ADBPATH-", readonly=True), sg.FileBrowse(key="-FBADB-", file_types=[("ADB", "*.exe")])],
+            [sg.Input(key="-ADBPATH-", readonly=True, disabled_readonly_text_color=sg.theme_input_text_color(), disabled_readonly_background_color=sg.theme_input_background_color()), sg.FileBrowse(key="-FBADB-", file_types=[("ADB", "*.exe")])],
             [sg.Text("Device")],
             [sg.Combo(key="-DEVICES-", values=[], size=(30, None), readonly=True), sg.Button(key="-REFRESH-", button_text="Refresh")],
             [sg.Button(key="-INSTALL-", button_text="Install"), sg.Text(key="-STATE-")],
