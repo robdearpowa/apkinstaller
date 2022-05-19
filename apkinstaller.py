@@ -9,7 +9,7 @@ sg.LOOK_AND_FEEL_TABLE["Marketwall"] = {
     "BACKGROUND": "#424242",
     "TEXT": "#FFFFFF",
     "INPUT": "#656565",
-    "TEXT_INPUT": "#656565",
+    "TEXT_INPUT": "#FFFFFF",
     "SCROLL": "#212121",
     "BUTTON": ("#FFFFFF", "#4595F7"),
     "PROGRESS": ("#656565", "#4595F7"),
