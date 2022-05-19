@@ -122,10 +122,11 @@ class App:
     def salva_configurazione(self):
         config = ConfigParser()
         config.read("config.ini")
-        if not config.has_section("config"):
-            config.add_section("config")
-        config.set("config", "apk_path", self.apk_input.get())
-        config.set("config", "adb_path", self.adb_input.get())
+        
+        config["config"] = {
+            "apk_path": self.get_apk_path(),
+            "adb_path": self.get_adb_path()
+        }
 
         with open("config.ini", "w") as f:
             config.write(f)
@@ -138,13 +139,13 @@ class App:
             apk_path = ""
             adb_path = ""
 
-            if config.has_section("config"):
+            if "config" in config:
 
-                if config.has_option("config", "apk_path"):
-                    apk_path = config.get("config", "apk_path")
+                if "apk_path" in config["config"]:
+                    apk_path = config["config"]["apk_path"]
 
-                if config.has_option("config", "adb_path"):
-                    adb_path = config.get("config", "adb_path")
+                if "adb_path" in config["config"]:
+                    adb_path = config["config"]["adb_path"]
 
             self.apk_input.update(value=apk_path)
             self.adb_input.update(value=adb_path)
