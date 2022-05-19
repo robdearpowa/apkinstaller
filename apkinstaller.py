@@ -72,7 +72,7 @@ class App:
         return self.device_selector.get()
 
     def check_selected_device(self) -> bool:
-        return self.get_selected_device() and self.get_selected_device().id and self.get_selected_device().id != ""
+        return self.get_selected_device() != None and self.get_selected_device() != "" and self.get_selected_device().id != None and self.get_selected_device().id != ""
 
     def start(self) -> None:
         while True:
@@ -94,7 +94,7 @@ class App:
     #def set_path
 
     def installa_apk(self) -> None:
-        if not self.check_adb_path() and not self.check_selected_device() and not self.check_apk_path(): return
+        if not self.check_adb_path() or not self.check_selected_device() or not self.check_apk_path(): return
 
         try:
             self.txt_state.update(value="Installing...")
