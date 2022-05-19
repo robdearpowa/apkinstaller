@@ -1,9 +1,11 @@
+from enum import Enum
 from time import sleep
 import PySimpleGUI as sg
 import os
 import subprocess
 from configparser import ConfigParser
 from threading import Thread
+import platform
 
 sg.LOOK_AND_FEEL_TABLE["Marketwall"] = {
     "BACKGROUND": "#424242",
@@ -18,6 +20,11 @@ sg.LOOK_AND_FEEL_TABLE["Marketwall"] = {
 }
   
 sg.theme('Marketwall')
+
+class HostPlatform(Enum):
+    linux = "Linux"
+    win = "Windows"
+    mac = "Dawrin"
 
 class DeviceModel:
     def __init__(self, id: str, name: str) -> None:
@@ -34,7 +41,7 @@ class App:
         layout = [
             [sg.Text("Apk path")],
             [sg.Input(key="-APKPATH-", readonly=True, disabled_readonly_text_color=sg.theme_input_text_color(), disabled_readonly_background_color=sg.theme_input_background_color()), sg.FileBrowse(key="-FBAPK-", file_types=[("APK", "*.apk")])],
-            [sg.Text("Adb path")],
+            [sg.Text("Adb path", key="-ADBLABEL-")],
             [sg.Input(key="-ADBPATH-", readonly=True, disabled_readonly_text_color=sg.theme_input_text_color(), disabled_readonly_background_color=sg.theme_input_background_color()), sg.FileBrowse(key="-FBADB-", file_types=[("ADB", "*.exe")])],
             [sg.Text("Device")],
             [sg.Combo(key="-DEVICES-", values=[], size=(30, None), readonly=True), sg.Button(key="-REFRESH-", button_text="Refresh")],
@@ -45,11 +52,22 @@ class App:
         self.window = sg.Window("Apk Installer", layout=layout, finalize=True)
 
         self.apk_input = self.window["-APKPATH-"]
+        self.adb_label = self.window["-ADBLABEL-"]
+        self.adb_picker = self.window["-FBADB-"]
         self.adb_input = self.window["-ADBPATH-"]
         self.txt_state = self.window["-STATE-"]
         self.console = self.window["-CONSOLE-"]
         self.device_selector = self.window["-DEVICES-"]
         self.device_list = []
+        self.os = HostPlatform(platform.system())
+
+        if not self.check_host_platform():
+            sg.Popup("Piattaforma non supportata")
+
+        if self.os is HostPlatform.linux:
+            self.adb_input.update(value="adb", visible=False)
+            self.adb_label.update(visible=False)
+            self.adb_picker.update(visible=False)
 
         self.carica_configurazione()
         self.check_devices()
@@ -60,7 +78,7 @@ class App:
         return self.adb_input.get().rstrip()
     
     def check_adb_path(self) -> bool:
-        return self.get_adb_path() and self.get_adb_path() != "" and os.path.exists(self.get_adb_path())
+        return (self.get_adb_path() and self.get_adb_path() != "" and os.path.exists(self.get_adb_path())) or self.os is HostPlatform.linux
 
     def get_apk_path(self) -> str:
         return self.apk_input.get().rstrip()
@@ -194,6 +212,10 @@ class App:
 
         self.device_selector.update(values=self.device_list, set_to_index=0)
         pass
+
+    def check_host_platform(self) -> bool:
+        if self.os is HostPlatform.mac: return False
+        return True
 
 
 app = App()
