@@ -1,4 +1,5 @@
 from enum import Enum
+import sys
 from time import sleep
 import PySimpleGUI as sg
 import os
@@ -49,7 +50,7 @@ class App:
             [sg.Multiline(key="-CONSOLE-", size=(None, 10), disabled=True, autoscroll=True, horizontal_scroll=True, visible=False)]
         ]
 
-        self.window = sg.Window("Apk Installer", layout=layout, finalize=True)
+        self.window = sg.Window("Apk Installer", layout=layout, icon=self.get_resource_path("icon.ico"), finalize=True)
 
         self.apk_input = self.window["-APKPATH-"]
         self.adb_label = self.window["-ADBLABEL-"]
@@ -216,6 +217,15 @@ class App:
     def check_host_platform(self) -> bool:
         if self.os is HostPlatform.mac: return False
         return True
+
+    def get_resource_path(self, relative_path: str) -> str:
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
 
 
 app = App()
