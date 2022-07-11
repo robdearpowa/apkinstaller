@@ -36,6 +36,9 @@ class DeviceModel:
     def __str__(self) -> str:
         return self.name
 
+    def __eq__(self, __o: object) -> bool:
+        return type(__o) is type(self) and self.id == __o.id
+
 class App:
 
     def __init__(self) -> None:
@@ -95,7 +98,7 @@ class App:
 
     def start(self) -> None:
         while True:
-            event, values = self.window.read()
+            event, values = self.window.read(timeout=1000)
             if event == sg.WIN_CLOSED or event == "Cancel":
                 self.salva_configurazione()
                 break
@@ -105,6 +108,8 @@ class App:
 
             if event == "-FBADB-" or event == "-REFRESH-":
                 self.check_devices()
+
+            self.check_devices()
 
 
         self.window.close()
@@ -183,6 +188,8 @@ class App:
 
     def check_devices(self) -> None:
 
+        current_device = self.get_selected_device()
+
         self.device_list.clear()
 
         if not self.check_adb_path(): return
@@ -211,7 +218,9 @@ class App:
 
         p.wait()
 
-        self.device_selector.update(values=self.device_list, set_to_index=0)
+        pos = self.device_list.index(current_device) if current_device in self.device_list else 0
+
+        self.device_selector.update(values=self.device_list, set_to_index=pos)
         pass
 
     def check_host_platform(self) -> bool:
