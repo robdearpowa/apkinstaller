@@ -111,7 +111,8 @@ class App:
 
             self.check_devices()
 
-
+        cmd = f'{self.get_adb_path()} kill-server'
+        subprocess.call(args=cmd)
         self.window.close()
         pass
 
