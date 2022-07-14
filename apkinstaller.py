@@ -1,5 +1,6 @@
 from enum import Enum
 import sys
+import threading
 from time import sleep
 import PySimpleGUI as sg
 import os
@@ -42,18 +43,25 @@ class DeviceModel:
 class App:
 
     def __init__(self) -> None:
-        layout = [
-            [sg.Text("Apk path")],
-            [sg.Input(key="-APKPATH-", readonly=True, disabled_readonly_text_color=sg.theme_input_text_color(), disabled_readonly_background_color=sg.theme_input_background_color()), sg.FileBrowse(key="-FBAPK-", file_types=[("APK", "*.apk")])],
-            [sg.Text("Adb path", key="-ADBLABEL-")],
-            [sg.Input(key="-ADBPATH-", readonly=True, disabled_readonly_text_color=sg.theme_input_text_color(), disabled_readonly_background_color=sg.theme_input_background_color()), sg.FileBrowse(key="-FBADB-", file_types=[("ADB", "*.exe")])],
-            [sg.Text("Device")],
-            [sg.Combo(key="-DEVICES-", values=[], size=(30, None), readonly=True), sg.Button(key="-REFRESH-", button_text="Refresh")],
-            [sg.Button(key="-INSTALL-", button_text="Install"), sg.Text(key="-STATE-")],
-            [sg.Multiline(key="-CONSOLE-", size=(None, 10), disabled=True, autoscroll=True, horizontal_scroll=True, visible=False)]
+    
+        bottom_layout = [
+            [sg.Multiline(key="-CONSOLE-", size=(5, 10), disabled=True, autoscroll=True, horizontal_scroll=True, visible=True, expand_x=True, expand_y=True)],
+            [sg.Button(key="-INSTALL-", button_text="Install", ), sg.Text(key="-STATE-")],
         ]
 
-        self.window = sg.Window("Apk Installer", layout=layout, icon=self.get_resource_path("icon.ico"), finalize=True)
+        layout = [
+            [sg.Text("Apk path")],
+            [sg.Input(key="-APKPATH-", expand_x=True, readonly=True, disabled_readonly_text_color=sg.theme_input_text_color(), disabled_readonly_background_color=sg.theme_input_background_color()), sg.FileBrowse(key="-FBAPK-", file_types=[("APK", "*.apk")])],
+            [sg.Text("Adb path", key="-ADBLABEL-")],
+            [sg.Input(key="-ADBPATH-", expand_x=True, readonly=True, disabled_readonly_text_color=sg.theme_input_text_color(), disabled_readonly_background_color=sg.theme_input_background_color()), sg.FileBrowse(key="-FBADB-", file_types=[("ADB", "*.exe")])],
+            [sg.Text("Device")],
+            [sg.Combo(key="-DEVICES-", expand_x=True, values=[], size=(30, None), readonly=True), sg.Button(key="-REFRESH-", button_text="Refresh")],
+            [sg.Column(layout=bottom_layout, expand_x=True, expand_y=True, vertical_alignment='bottom', pad=(0, 0))]
+        ]
+
+        self.window = sg.Window("Apk Installer", layout=layout, icon=self.get_resource_path("icon.ico"), finalize=True, resizable=True)
+
+        self.window.set_min_size(self.window.size)
 
         self.apk_input = self.window["-APKPATH-"]
         self.adb_label = self.window["-ADBLABEL-"]
@@ -64,6 +72,7 @@ class App:
         self.device_selector = self.window["-DEVICES-"]
         self.device_list = []
         self.os = HostPlatform(platform.system())
+        self.check_thread: threading.Thread = None
 
         if not self.check_host_platform():
             sg.Popup("Piattaforma non supportata")
@@ -187,7 +196,12 @@ class App:
             self.adb_input.update(value=adb_path)
         pass
 
-    def check_devices(self) -> None:
+    def check_devices(self, force_update = False) -> None:
+        if self.check_thread is not None and self.check_thread.is_alive() and not force_update: return
+        self.check_thread = threading.Thread(target=self.check_devices_thread)
+        self.check_thread.start()
+
+    def check_devices_thread(self) -> None:
 
         current_device = self.get_selected_device()
 
